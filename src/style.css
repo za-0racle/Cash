@@ -1,5 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;550;600;700&family=Inter:wght@400;450;500;550;600;650;700;800&display=swap");
 @import "tailwindcss";
+.overview-summary {display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:stretch}
+.recent-transactions>.section-heading {margin-bottom:22px}
+@media(max-width:1000px){.overview-summary{grid-template-columns:1fr;gap:20px}}
 .app-loading{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:radial-gradient(ellipse at 50% 50%,#122849,#070b14 70%);color:#7da8df}.app-loading p{font-size:12px}
 .chart-loading {
   min-height: 296px;

@@ -19,7 +19,7 @@ npm run preview
 
 ## Included workflows
 
-- Protected dashboard, balances, monthly/weekly chart, privacy toggle, and simulated refresh.
+- Focused overview with account balance, recent cheques, recent transactions, balance privacy, and simulated refresh. Detailed filters remain on the Transactions page.
 - Signup, signin, and password reset interfaces, with Zod / React Hook Form validation. Passwords are never persisted.
 - Six-step cheque request with amount and delivery validation; creates a unique submitted request and illustrative shipping invoice.
 - Cheque list and detail timeline; seeded shipment selection and six-stage courier timelines.

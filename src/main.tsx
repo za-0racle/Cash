@@ -80,7 +80,6 @@ import {
 import "./style.css";
 const Auth = React.lazy(() => import("./pages/Auth"));
 const RequestCheque = React.lazy(() => import("./pages/RequestCheque"));
-const ActivityChart = React.lazy(() => import("./components/ActivityChart"));
 
 const nav = [
   { path: "", label: "Overview", icon: LayoutDashboard },
@@ -389,11 +388,6 @@ function BalanceCard({ large = false }: { large?: boolean }) {
 }
 function Overview() {
   const s = useStore();
-  const invoices = s.invoices;
-  const pending = s.cheques.filter(
-    (c) => !["Delivered", "Cancelled"].includes(c.status),
-  ).length;
-  const paid = invoices.filter((i) => i.paid).reduce((a, i) => a + i.amount, 0);
   return (
     <>
       <PageHeading
@@ -411,120 +405,9 @@ function Overview() {
           </div>
         }
       />
-      <div className="hero-grid">
+
+      <div className="overview-summary">
         <BalanceCard />
-        <section className="quick-card panel">
-          <div className="section-heading">
-            <h2>Move your money forward</h2>
-            <span className="sparkle">✧</span>
-          </div>
-          <p>Everything you need, one connection away.</p>
-          <div className="quick-actions">
-            {[
-              {
-                label: "Request Cheque",
-                icon: FilePlus2,
-                path: "request-cheque",
-                color: "blue",
-              },
-              {
-                label: "Transactions",
-                icon: ArrowLeftRight,
-                path: "transactions",
-                color: "cyan",
-              },
-              {
-                label: "Track Shipment",
-                icon: Truck,
-                path: "shipping",
-                color: "purple",
-              },
-              {
-                label: "View Payments",
-                icon: CreditCard,
-                path: "payments",
-                color: "gold",
-              },
-            ].map(({ label, icon: Icon, path, color }) => (
-              <Link key={path} to={"/dashboard/" + path}>
-                <span className={"quick-icon " + color}>
-                  <Icon size={21} />
-                </span>
-                <span>{label}</span>
-                <ArrowUpRight size={14} />
-              </Link>
-            ))}
-          </div>
-          <div className="quick-note">
-            <ShieldCheck size={14} />
-            Your next financial move, made simple.
-          </div>
-        </section>
-      </div>
-      <div className="stats-grid">
-        {[
-          {
-            label: "Total Cheque Requests",
-            value: s.cheques.length.toString().padStart(2, "0"),
-            icon: Files,
-            color: "blue",
-            note: "Across all requests",
-            tag: "All time",
-          },
-          {
-            label: "Pending Cheques",
-            value: pending.toString().padStart(2, "0"),
-            icon: Clock3,
-            color: "gold",
-            note: "Awaiting next steps",
-            tag: "In progress",
-          },
-          {
-            label: "Completed Deliveries",
-            value: s.cheques
-              .filter((c) => c.status === "Delivered")
-              .length.toString()
-              .padStart(2, "0"),
-            icon: PackageCheck,
-            color: "green",
-            note: "Successfully delivered",
-            tag: "Demo records",
-          },
-          {
-            label: "Shipping Payments",
-            value: money(paid),
-            icon: CreditCard,
-            color: "purple",
-            note: "Total illustrative charges",
-            tag: "Paid",
-          },
-        ].map(({ label, value, icon: Icon, color, note, tag }) => (
-          <section className="stat-card panel" key={label}>
-            <div className="stat-top">
-              <span>{label}</span>
-              <span className={"stat-icon " + color}>
-                <Icon size={17} />
-              </span>
-            </div>
-            <strong className="stat-value">{value}</strong>
-            <div className="stat-bottom">
-              <span>{note}</span>
-              <span className={color}>{tag}</span>
-            </div>
-          </section>
-        ))}
-      </div>
-      <div className="middle-grid">
-        <React.Suspense
-          fallback={
-            <section className="panel chart-loading">
-              <RefreshCw className="spinning" size={20} />
-              <span>Loading demo activity…</span>
-            </section>
-          }
-        >
-          <ActivityChart />
-        </React.Suspense>
         <section className="panel cheques-preview">
           <div className="section-heading">
             <h2>Recent cheques</h2>
@@ -566,17 +449,6 @@ function Overview() {
         </section>
       </div>
       <TransactionTable compact />
-      <div className="demo-disclosure">
-        <span className="demo-info">i</span>
-        <p>
-          <strong>A real experience. Illustrative data.</strong> You’re
-          exploring a demo environment. Accounts, balances, cheques, and
-          shipments are fictional.
-        </p>
-        <Link to="/dashboard/accounts">
-          Learn more <ArrowUpRight size={14} />
-        </Link>
-      </div>
     </>
   );
 }
@@ -633,7 +505,11 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
     URL.revokeObjectURL(url);
   }
   return (
-    <section className="panel transaction-panel">
+    <section
+      className={
+        "panel transaction-panel" + (compact ? " recent-transactions" : "")
+      }
+    >
       <div className="section-heading">
         <div>
           <h2>{compact ? "Recent transactions" : "All transactions"}</h2>
@@ -655,63 +531,65 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
           </Button>
         )}
       </div>
-      <div className="table-tools">
-        <div className="table-search">
-          <Search size={15} />
-          <input
-            aria-label="Search transaction list"
-            placeholder="Search transactions..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
-        <div className="filters">
-          <select
-            aria-label="Filter category"
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setPage(1);
-            }}
-          >
-            {[
-              "All categories",
-              ...new Set(transactions.map((t) => t.category)),
-            ].map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-          {!compact && (
-            <select
-              aria-label="Filter status"
-              value={status}
+      {!compact && (
+        <div className="table-tools">
+          <div className="table-search">
+            <Search size={15} />
+            <input
+              aria-label="Search transaction list"
+              placeholder="Search transactions..."
+              value={search}
               onChange={(e) => {
-                setStatus(e.target.value);
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <div className="filters">
+            <select
+              aria-label="Filter category"
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
                 setPage(1);
               }}
             >
-              {["All statuses", "Completed", "Pending"].map((c) => (
+              {[
+                "All categories",
+                ...new Set(transactions.map((t) => t.category)),
+              ].map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
-          )}
-          <select
-            aria-label="Filter date"
-            value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              setPage(1);
-            }}
-          >
-            {["All dates", "November 2026", "October 2026"].map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
+            {!compact && (
+              <select
+                aria-label="Filter status"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setPage(1);
+                }}
+              >
+                {["All statuses", "Completed", "Pending"].map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+            )}
+            <select
+              aria-label="Filter date"
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value);
+                setPage(1);
+              }}
+            >
+              {["All dates", "November 2026", "October 2026"].map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
       <div className="table-scroll">
         <table>
           <thead>
