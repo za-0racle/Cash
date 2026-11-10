@@ -1,6 +1,9 @@
 # BankLink Finance
 
-A React 19 + TypeScript frontend prototype with fictional banking data. It never connects to a bank, courier, wallet, or payment processor.
+A React 19 + TypeScript financial workspace UI. The interface is prepared for
+Chase and Bank of America bank connections and FedEx and DHL Express shipping.
+Provider, authentication, payment, and backend integrations are not configured;
+account balances and payment or tracking activity are unavailable.
 
 ## Run locally
 
@@ -9,7 +12,9 @@ npm install
 npm run dev
 ```
 
-Open the printed Vite URL, then select **Explore Demo Dashboard**. The demo profile is Alexander Morgan. Registration also creates a simulated session; it does not register a real account.
+Open the printed Vite URL and choose **Open account preview** to inspect the
+workspace. The profile name is Samuel Daren. Sign-in, account creation, and
+password reset require an authentication service.
 
 ```sh
 npm run typecheck
@@ -17,24 +22,33 @@ npm run build
 npm run preview
 ```
 
-## Included workflows
+## Current UI
 
-- Focused overview with account balance, recent cheques, recent transactions, balance privacy, and simulated refresh. Detailed filters remain on the Transactions page.
-- Signup, signin, and password reset interfaces, with Zod / React Hook Form validation. Passwords are never persisted.
-- Six-step cheque request with amount and delivery validation; creates a unique submitted request and illustrative shipping invoice.
-- Cheque list and detail timeline; seeded shipment selection and six-stage courier timelines.
-- Card, ACH, and BTC demonstration checkouts with simulated receipts. Payment state never advances cheque issuance.
-- Transaction search, date/category/status filters, pagination, details, and filtered CSV export.
-- Notification read states, editable demo profile, local preferences, compact layout, and mobile navigation.
+- Bank connection choices for Chase and Bank of America, marked unavailable
+  until secure provider integration is configured.
+- FedEx and DHL Express carrier selection in cheque requests and shipping.
+  Carrier rates and tracking require a live carrier connection.
+- Cheque request form saves local drafts only. It does not issue cheques,
+  reserve funds, book shipments, or create invoices.
+- Bitcoin is the only selectable payment method. Checkout remains unavailable
+  until a wallet/payment provider is integrated; bank card and bank transfer
+  are disabled.
+- Overview and transaction history include seven generated example transactions.
+  The cheque list includes six generated example requests. A visible notice
+  identifies these as examples, not records from a connected account.
+- Balance-history, invoice, and shipment views remain empty until connected
+  services provide verified records.
 
-## Data and architecture
+## Architecture
 
-`src/store.ts` defines typed records, centralized fictional data, and Zustand actions. Persisted data contains only demo records, profile information, and preferences. A remembered demo session uses localStorage; an unremembered session uses sessionStorage. Do not enter real personal or financial information.
+`src/store.ts` contains UI state and local draft handling. `src/main.tsx`
+contains the router, dashboard shell, and account, transaction, cheque,
+shipping, payment, and settings screens. Authentication and cheque-request
+forms are in `src/pages/`; shared UI components and the bank-activity empty
+state are in `src/components/`.
 
-`src/main.tsx` contains the router, protected shell, and dashboard screens. `src/pages/` contains lazy-loaded authentication and cheque request flows; `src/components/` contains shared interface elements and the separately loaded financial chart. `src/style.css` defines the dark visual system and responsive layouts. The chart uses illustrative historical snapshots ending at the same $48,750 available balance displayed in the account. The pending $1,500 transfer explains the difference between current and available balances. Cheque and invoice summary figures derive from the same stored records shown in their lists.
-
-For a later NestJS/Supabase phase, replace the simulated session and store actions with typed API adapters and server-validated authentication and financial operations. Route-level protection in this prototype provides navigation behavior only. Real authorization, audit records, rate calculations, payment confirmation, and cheque status transitions must be implemented on the server.
-
-All FedEx rates are illustrative estimates, with no availability or delivery promise. Tracking references deliberately begin with `DEMO-SHIP`. The fixed BTC conversion is illustrative, not a market quote. No real payment information is collected.
-
-To reset the prototype, remove `banklink-demo-v1` and `banklink-remember` from localStorage and `banklink-session` from sessionStorage, then reload. Static hosting must rewrite application routes to `index.html` for React Router.
+Do not use the balance preview or local profile as financial or identity
+verification. Before launch, configure secure server-side authentication,
+bank data access, payment processing, and carrier rating/tracking. Keep API
+credentials and financial operations on the server; do not collect bank
+credentials directly in this frontend.

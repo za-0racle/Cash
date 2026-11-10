@@ -11,7 +11,7 @@ import {
   PageHeading,
   Details,
 } from "../components/ui";
-import { useStore, money, account } from "../store";
+import { useStore } from "../store";
 import {
   Eye,
   EyeOff,
@@ -22,7 +22,6 @@ import {
   Files,
   ShieldCheck,
   ArrowRight,
-  RefreshCw,
   LayoutDashboard,
   ArrowUpRight,
 } from "lucide-react";
@@ -43,8 +42,6 @@ export default function Auth({
   const navigate = useNavigate();
   const login = useStore((s) => s.login);
   const [show, setShow] = useState(false);
-  const [remember, setRemember] = useState(true);
-  const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [policy, setPolicy] = useState(false);
   const schema =
@@ -64,7 +61,7 @@ export default function Auth({
           })
           .refine((v) => v.terms, {
             path: ["terms"],
-            message: "Please accept the demo terms.",
+            message: "Please accept the terms.",
           })
       : mode === "forgot"
         ? authSchema.extend({ password: z.string() })
@@ -92,25 +89,14 @@ export default function Auth({
     /[0-9]/.test(password),
     /[^a-zA-Z0-9]/.test(password),
   ].filter(Boolean).length;
-  function submit(v: AuthForm) {
-    setBusy(true);
-    setTimeout(() => {
-      setBusy(false);
-      if (mode === "forgot") {
-        setFeedback(
-          "Demo reset requested. No email was sent. Return to sign in to explore the dashboard.",
-        );
-        return;
-      }
-      login(
-        mode === "signup"
-          ? `${v.first.trim()} ${v.last.trim()}`
-          : "Alexander Morgan",
-        v.email,
-        remember,
-      );
-      navigate("/dashboard");
-    }, 700);
+  function submit() {
+    setFeedback(
+      mode === "forgot"
+        ? "Password reset is unavailable until authentication is connected."
+        : mode === "signup"
+          ? "Account creation is unavailable until authentication is connected."
+          : "Sign-in is unavailable until authentication is connected. Open the account preview to continue.",
+    );
   }
   function input(
     key: keyof AuthForm,
@@ -163,8 +149,8 @@ export default function Auth({
             </span>
           </h1>
           <p>
-            Experience a smarter way to manage connected banking, cheque
-            requests, and financial services.
+            Experience a smarter way to manage accounts, cheque requests, and
+            financial services.
           </p>
           <div className="network-art">
             <div className="network-ring ring-a" />
@@ -200,12 +186,14 @@ export default function Auth({
             ))}
           </div>
         </div>
-        <p className="auth-tagline">Banking Connected. Finance Simplified.</p>
+        <p className="auth-tagline">
+          Banking, made clearer. Finance, simplified.
+        </p>
       </section>
       <section className="auth-form-side">
-        <span className="demo-tag">
+        <span className="environment-tag">
           <span />
-          Interactive prototype · fictional data
+          Integrations pending
         </span>
         <div className="auth-form">
           <div className="eyebrow">WELCOME TO BANKLINK</div>
@@ -218,16 +206,16 @@ export default function Auth({
           </h2>
           <p>
             {mode === "signup"
-              ? "Create your demo account. A more connected experience awaits."
+              ? "Account creation will be available after authentication is connected."
               : mode === "forgot"
-                ? "Enter your email to explore the password reset interface."
-                : "Your financial world is right where you left it."}
+                ? "Password reset will be available after authentication is connected."
+                : "Sign-in will be available after authentication is connected."}
           </p>
           <form onSubmit={handleSubmit(submit)}>
             {mode === "signup" && (
               <div className="form-grid">
-                {input("first", "First name", "Alexander")}
-                {input("last", "Last name", "Morgan")}
+                {input("first", "First name", "Samuel")}
+                {input("last", "Last name", "Daren")}
               </div>
             )}
             {input("email", "Email address", "you@example.com", "email")}
@@ -269,7 +257,7 @@ export default function Auth({
                       className="inline-link"
                       onClick={() => setPolicy(true)}
                     >
-                      demo terms and privacy notice
+                      terms and privacy notice
                     </button>
                     .
                   </span>
@@ -281,24 +269,16 @@ export default function Auth({
             )}
             {mode === "signin" && (
               <div className="auth-options">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                  />
-                  Remember me
-                </label>
+                <span>Authentication unavailable</span>
                 <Link to="/forgot-password">Forgot password?</Link>
               </div>
             )}
-            <Button kind="primary full" type="submit" disabled={busy}>
-              {busy ? <RefreshCw className="spinning" size={17} /> : null}
+            <Button kind="primary full" type="submit">
               {mode === "signup"
-                ? "Create demo account"
+                ? "Account creation unavailable"
                 : mode === "forgot"
-                  ? "Request demo reset"
-                  : "Sign in to demo"}
+                  ? "Password reset unavailable"
+                  : "Sign-in unavailable"}
               <ArrowRight size={16} />
             </Button>
             {feedback && (
@@ -313,20 +293,20 @@ export default function Auth({
                 <span>or take a look around</span>
               </div>
               <Button
-                kind="full demo-access"
+                kind="full dashboard-access"
                 onClick={() => {
                   login();
                   navigate("/dashboard");
                 }}
               >
                 <LayoutDashboard size={17} />
-                Explore Demo Dashboard
+                Open account preview
                 <ArrowUpRight size={16} />
               </Button>
               <p className="auth-disclaimer">
-                Meet Alexander Morgan, your fictional demo profile.
+                Preview profile: Samuel Daren.
                 <br />
-                No account or real authentication required.
+                No bank or payment data is connected.
               </p>
             </>
           )}
@@ -343,20 +323,18 @@ export default function Auth({
         </div>
         <div className="auth-footer">
           <ShieldCheck size={14} />
-          Frontend demonstration. No real banking services.
+          Bank, carrier, and payment integrations are not connected.
         </div>
       </section>
       {policy && (
-        <Modal title="Demo terms & privacy" onClose={() => setPolicy(false)}>
+        <Modal title="Terms & privacy" onClose={() => setPolicy(false)}>
           <p>
-            BankLink Finance is an interactive frontend prototype using
-            fictional financial records. It does not provide banking, cheque
-            issuance, courier services, or payment processing.
+            BankLink Finance currently has no bank, carrier, or payment
+            integrations. Cheque requests are saved locally and are not issued.
           </p>
           <p>
-            Use fictional profile information. Demo profile, records, and
-            preferences are stored in your browser. Passwords are never saved.
-            Clearing browser storage removes demo changes.
+            Profile and preferences are stored in this browser. Passwords and
+            banking credentials are not saved.
           </p>
           <Button kind="primary" onClick={() => setPolicy(false)}>
             Understood

@@ -239,6 +239,11 @@ input[type="radio"] {
 .active .active-dot {
   display: block;
 }
+.service-option .quote-pending {
+  color: #d8b46a;
+  font-size: 10px;
+  font-weight: 500;
+}
 .nav-count {
   margin-left: auto;
   font-size: 9px;
@@ -369,7 +374,7 @@ input[type="radio"] {
   color: #74829b;
   padding: 1px 4px;
 }
-.demo-tag {
+.environment-tag {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -381,7 +386,7 @@ input[type="radio"] {
   font-size: 9px;
   white-space: nowrap;
 }
-.demo-tag > span {
+.environment-tag > span {
   width: 4px;
   height: 4px;
   background: #d8b46a;
@@ -572,9 +577,6 @@ main {
 }
 .balance-top .badge {
   font-size: 8px;
-  background: #17463855;
-  border-color: #337d6855;
-  color: #83d4b6;
 }
 .balance-label {
   display: flex;
@@ -593,6 +595,8 @@ main {
   font-family: "DM Sans", sans-serif;
   display: flex;
   align-items: baseline;
+  flex-wrap: nowrap;
+  white-space: nowrap;
   font-size: 44px;
   font-weight: 550;
   letter-spacing: -1.9px;
@@ -645,7 +649,7 @@ main {
 .balance-bottom > div {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
 }
 .bank-dot {
   width: 5px;
@@ -655,16 +659,42 @@ main {
 }
 .balance-caption {
   color: #758fae;
-  margin-left: 4px;
+  margin-left: auto;
   font-size: 7px;
+  white-space: nowrap;
 }
-.balance-bottom button {
+.card-network-logos {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 8px;
-  color: #92aac9;
-  padding: 0;
+  gap: 10px;
+  min-height: 20px;
+}
+.mastercard-logo {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  width: 31px;
+  height: 20px;
+}
+.mastercard-logo i {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eb001b;
+}
+.mastercard-logo i + i {
+  right: 0;
+  background: #f79e1b;
+  mix-blend-mode: screen;
+}
+.verve-logo {
+  color: #d7e5f8;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 .balance-orbit {
   position: absolute;
@@ -1148,7 +1178,7 @@ th.amount-col {
   background: #253a53;
   color: #e0edff;
 }
-.demo-disclosure {
+.disclosure-panel {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1158,7 +1188,7 @@ th.amount-col {
   margin-top: 19px;
   padding: 12px 15px;
 }
-.demo-info {
+.disclosure-info {
   width: 15px;
   height: 15px;
   display: grid;
@@ -1169,16 +1199,16 @@ th.amount-col {
   font-size: 10px;
   flex-shrink: 0;
 }
-.demo-disclosure p {
+.disclosure-panel p {
   font-size: 8px;
   color: #778ba8;
 }
-.demo-disclosure p strong {
+.disclosure-panel p strong {
   font-weight: 500;
   color: #b0c1d9;
   margin-right: 6px;
 }
-.demo-disclosure a {
+.disclosure-panel a {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1343,6 +1373,38 @@ th.amount-col {
 .empty-state p {
   font-size: 11px;
   margin-top: 8px;
+}
+.empty-state h3 {
+  color: #b7c8df;
+  font-size: 14px;
+  margin: 0;
+}
+.provider-list {
+  display: grid;
+  gap: 12px;
+}
+.provider-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid #26354b;
+  border-radius: 8px;
+  background: #101d30;
+}
+.provider-row strong,
+.provider-row small {
+  display: block;
+}
+.provider-row strong {
+  color: #d2dded;
+  font-size: 12px;
+}
+.provider-row small {
+  color: #8295af;
+  font-size: 10px;
+  margin-top: 5px;
 }
 .modal-backdrop {
   position: fixed;
@@ -1703,6 +1765,23 @@ th.amount-col {
   gap: 22px;
   align-items: start;
 }
+.carrier-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.carrier-panel .section-sub {
+  margin: 6px 0 0;
+}
+.shipping-empty {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 .shipment-list {
   padding: 23px 18px;
 }
@@ -1854,7 +1933,46 @@ th.amount-col {
   margin-left: auto;
   font-size: 9px;
 }
-.demo-payment-method {
+.payment-methods,
+.card-preview-section {
+  margin-bottom: 20px;
+}
+.payment-methods > .field {
+  max-width: 420px;
+}
+.payment-methods > .muted,
+.card-preview-section > .muted {
+  font-size: 10px;
+}
+.card-preview {
+  min-height: 170px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px;
+  margin: 18px 0;
+  color: #d7e5f8;
+  border: 1px solid #36527a;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 100% 0, #3d70a966, transparent 56%), #101d30;
+}
+.card-preview span {
+  color: #9fb3d0;
+  font-size: 10px;
+}
+.card-preview strong {
+  font-size: 16px;
+  letter-spacing: 1.5px;
+}
+.card-preview small {
+  color: #b7c8df;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.payment-method-panel {
   display: flex;
   gap: 18px;
   align-items: center;
@@ -1864,15 +1982,15 @@ th.amount-col {
   border-radius: 9px;
   color: #80aaed;
 }
-.demo-payment-method strong {
+.payment-method-panel strong {
   font-size: 13px;
   color: #c5d6ed;
 }
-.demo-payment-method p {
+.payment-method-panel p {
   font-size: 10px;
   margin-top: 8px;
 }
-.demo-payment-method .badge {
+.payment-method-panel .badge {
   margin-top: 12px;
 }
 .bitcoin-icon {
@@ -2271,7 +2389,7 @@ th.amount-col {
   background:
     radial-gradient(ellipse at 100% 0, #12223b60, transparent 70%), #080e1a;
 }
-.auth-form-side > .demo-tag {
+.auth-form-side > .environment-tag {
   align-self: flex-end;
 }
 .auth-form {
@@ -2359,7 +2477,7 @@ th.amount-col {
   font-size: 9px;
   padding: 0 12px;
 }
-.demo-access {
+.dashboard-access {
   background: #12223a;
   border-color: #2a4669;
   color: #b9d3f3;
@@ -2694,10 +2812,10 @@ th.amount-col {
     font-size: 8px;
     gap: 10px;
   }
-  .demo-disclosure p {
+  .disclosure-panel p {
     font-size: 9px;
   }
-  .demo-disclosure a {
+  .disclosure-panel a {
     display: none;
   }
   .wizard-layout {
@@ -2870,7 +2988,7 @@ th.amount-col {
   .notification-button {
     padding-left: 15px;
   }
-  .demo-tag {
+  .environment-tag {
     font-size: 8px;
     padding: 5px 7px;
   }
@@ -2991,14 +3109,14 @@ th.amount-col {
   .footer-brand {
     margin-left: 5px;
   }
-  .demo-disclosure {
+  .disclosure-panel {
     padding: 12px;
   }
-  .demo-disclosure p {
+  .disclosure-panel p {
     font-size: 8px;
     line-height: 1.8;
   }
-  .demo-disclosure strong {
+  .disclosure-panel strong {
     display: block;
   }
   .page-heading > .button {
@@ -3196,7 +3314,7 @@ th.amount-col {
   .auth-form-side {
     padding: 23px 25px 25px;
   }
-  .auth-form-side > .demo-tag {
+  .auth-form-side > .environment-tag {
     align-self: center;
   }
   .auth-form {
@@ -3232,7 +3350,7 @@ th.amount-col {
   .topbar-actions {
     gap: 10px;
   }
-  .demo-tag {
+  .environment-tag {
     font-size: 7px;
   }
   .date-display {

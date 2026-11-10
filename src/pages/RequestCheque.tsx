@@ -11,7 +11,7 @@ import {
   PageHeading,
   Details,
 } from "../components/ui";
-import { useStore, money, account } from "../store";
+import { useStore, money, account, shippingProviders } from "../store";
 import {
   Check,
   ShieldCheck,
@@ -30,8 +30,7 @@ const chequeSchema = z.object({
     (v) => (v === undefined || v === "" ? 0 : v),
     z.coerce
       .number({ error: "Enter a valid cheque amount." })
-      .positive("Enter an amount greater than $0.")
-      .max(account.available, "Amount exceeds the demo available balance."),
+      .positive("Enter an amount greater than $0."),
   ),
   payee: z.string().trim().min(2, "Enter the payee’s full name."),
   memo: z.string().max(150),
@@ -43,27 +42,38 @@ const chequeSchema = z.object({
   state: z.string().regex(/^[A-Za-z]{2}$/, "Use a two-letter state code."),
   zip: z.string().regex(/^\d{5}(-\d{4})?$/, "Enter a valid ZIP code."),
   phone: z.string().regex(/^[+\d\s()-]{10,20}$/, "Enter a valid phone number."),
+  carrier: z.string().min(1),
   service: z.string().min(1),
 });
 type ChequeForm = z.input<typeof chequeSchema>;
 const services = [
   {
     name: "FedEx Priority Overnight",
-    rate: 45,
-    description: "Priority service illustration",
+    carrier: "FedEx",
+    rate: 0,
+    description: "Priority overnight",
     icon: Zap,
   },
   {
     name: "FedEx Standard Overnight",
-    rate: 32,
-    description: "Standard service illustration",
+    carrier: "FedEx",
+    rate: 0,
+    description: "Standard overnight",
     icon: Truck,
   },
   {
     name: "FedEx 2Day",
-    rate: 24.5,
-    description: "Economy service illustration",
+    carrier: "FedEx",
+    rate: 0,
+    description: "Two-day delivery",
     icon: PackageCheck,
+  },
+  {
+    name: "DHL Express Worldwide",
+    carrier: "DHL Express",
+    rate: 0,
+    description: "International express",
+    icon: Truck,
   },
 ];
 export default function RequestCheque() {
@@ -78,6 +88,7 @@ export default function RequestCheque() {
     trigger,
     getValues,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<ChequeForm>({
     resolver: zodResolver(chequeSchema),
@@ -93,6 +104,7 @@ export default function RequestCheque() {
       state: "",
       zip: "",
       phone: "",
+      carrier: shippingProviders[0],
       service: "FedEx 2Day",
     },
   });
@@ -102,10 +114,12 @@ export default function RequestCheque() {
     "Delivery details",
     "Shipping preference",
     "Review request",
-    "Submit request",
+    "Save draft",
   ];
+  const carrier = watch("carrier");
+  const carrierServices = services.filter((s) => s.carrier === carrier);
   const selected =
-    services.find((s) => s.name === watch("service")) || services[2];
+    services.find((s) => s.name === watch("service")) || carrierServices[0];
   async function next() {
     const fields = (
       step === 1
@@ -189,8 +203,7 @@ export default function RequestCheque() {
           <div className="wizard-aside-note">
             <ShieldCheck size={22} />
             <p>
-              A demonstration from start to finish. No cheque is issued and no
-              funds are moved.
+              No cheque is issued and no funds are moved.
             </p>
           </div>
         </aside>
@@ -201,13 +214,13 @@ export default function RequestCheque() {
                 <Check size={32} />
               </span>
               <div className="eyebrow">YOU’RE ALL SET</div>
-              <h2>Demo request submitted.</h2>
-              <p>Your request has been added to My Cheques.</p>
+              <h2>Draft saved.</h2>
+              <p>Your draft has been saved in this browser.</p>
               <code>{reference}</code>
-              <Badge>Demo Request Submitted</Badge>
+              <Badge>Draft saved</Badge>
               <p className="muted">
-                No funds were reserved. Payment and cheque issuance are separate
-                steps. Your request will not automatically advance.
+                Nothing was sent to a bank or carrier. No funds were moved, and
+                this draft does not issue a cheque.
               </p>
               <Button
                 kind="primary"
@@ -223,12 +236,12 @@ export default function RequestCheque() {
               <p className="section-sub">
                 {
                   [
-                    "Choose the fictional account for this request.",
+                    "Choose an account for this request.",
                     "Who are you making this cheque out to?",
-                    "Tell us where your demo cheque would be delivered.",
-                    "Choose an illustrative service for your delivery.",
+                    "Tell us where your cheque would be delivered.",
+                    "Choose a carrier and service.",
                     "Make sure everything looks right before continuing.",
-                    "One final check before submitting your demo request.",
+                    "One final check before saving your draft.",
                   ][step]
                 }
               </p>
@@ -241,11 +254,11 @@ export default function RequestCheque() {
                       </span>
                       <div>
                         <strong>
-                          Premium Checking <span>•••• 4821</span>
+                          Premium Checking
                         </strong>
                         <small>{account.bank}</small>
                         <span className="cyan">
-                          Available: {money(account.available)}
+                          Balance preview: {money(account.available)}
                         </span>
                       </div>
                       <CheckCircle2 className="cyan" size={22} />
@@ -253,8 +266,8 @@ export default function RequestCheque() {
                     <div className="notice">
                       <CircleHelp size={18} />
                       <p>
-                        Demo account selected. No real bank connection or funds
-                        are involved.
+                        Bank connection required before this balance can be
+                        verified or used.
                       </p>
                     </div>
                   </>
@@ -300,13 +313,35 @@ export default function RequestCheque() {
                     <div className="notice amber-notice">
                       <CircleHelp size={18} />
                       <p>
-                        Illustrative estimates only. These are not actual FedEx
-                        quotes, availability, or delivery commitments.
+                        Live carrier rates and service availability require a
+                        carrier connection.
                       </p>
                     </div>
+                    <div className="segmented" aria-label="Shipping carrier">
+                      {shippingProviders.map((name) => (
+                        <button
+                          type="button"
+                          className={carrier === name ? "selected" : ""}
+                          key={name}
+                          onClick={() => {
+                            const nextService = services.find(
+                              (service) => service.carrier === name,
+                            );
+                            if (nextService) {
+                              setValue("carrier", name, { shouldValidate: true });
+                              setValue("service", nextService.name, {
+                                shouldValidate: true,
+                              });
+                            }
+                          }}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
                     <div className="service-options">
-                      {services.map(
-                        ({ name, rate, description, icon: Icon }) => (
+                      {carrierServices.map(
+                        ({ name, description, icon: Icon }) => (
                           <label
                             key={name}
                             className={
@@ -324,10 +359,7 @@ export default function RequestCheque() {
                               <strong>{name}</strong>
                               <small>{description}</small>
                             </span>
-                            <b>
-                              {money(rate)}
-                              <small>illustrative</small>
-                            </b>
+                            <b className="quote-pending">Quote required</b>
                           </label>
                         ),
                       )}
@@ -338,7 +370,7 @@ export default function RequestCheque() {
                   <>
                     <Details
                       rows={[
-                        ["Bank account", "Premium Checking · •••• 4821"],
+                        ["Bank account", "Premium Checking · •••• 2942"],
                         [
                           "Cheque amount",
                           money(Number(getValues("amount")) || 0),
@@ -351,16 +383,16 @@ export default function RequestCheque() {
                         ["Service", selected.name],
                         [
                           "Shipping estimate",
-                          money(selected.rate) + " · illustrative only",
+                          "Quote required after carrier connection",
                         ],
                       ]}
                     />
                     <div className="notice">
                       <ShieldCheck size={20} />
                       <p>
-                        This submits a fictional request only. No cheque is
-                        issued, no funds are reserved, and no shipment or
-                        payment is created with a real provider.
+                        This saves a local draft only. It does not issue a
+                        cheque, reserve funds, book a shipment, or create a
+                        payment.
                       </p>
                     </div>
                     {step === 5 && (
@@ -370,8 +402,7 @@ export default function RequestCheque() {
                           checked={accepted}
                           onChange={(e) => setAccepted(e.target.checked)}
                         />
-                        I understand this is a simulated request using fictional
-                        data.
+                        I understand this draft is saved locally and is not sent.
                       </label>
                     )}
                   </>
@@ -401,7 +432,7 @@ export default function RequestCheque() {
                     ) : (
                       <Send size={16} />
                     )}
-                    Submit demo request
+                    Save draft
                   </Button>
                 )}
               </div>

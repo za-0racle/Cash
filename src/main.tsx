@@ -63,8 +63,9 @@ import {
   useStore,
   money,
   account,
+  bankProviders,
+  shippingProviders,
   transactions,
-  activity,
   shipments,
   type Cheque,
   type Invoice,
@@ -120,14 +121,14 @@ function AppLayout() {
             <Building2 size={18} />
           </div>
           <div>
-            Personal workspace
+            Account dashboard
             <small>
-              Premium account <span>✧</span>
+              Financial services
             </small>
           </div>
           <ChevronDown size={14} />
         </div>
-        <span className="nav-label">WORKSPACE</span>
+        <span className="nav-label">FINANCIAL TOOLS</span>
         <nav>
           {nav.map(({ path, label, icon: Icon }) => (
             <NavLink
@@ -175,7 +176,7 @@ function AppLayout() {
             Sign Out
           </button>
           <div className="sidebar-footer">
-            <span className="online-dot" /> Demo environment <span>v1.0</span>
+            <span className="online-dot" /> Dashboard <span>v1.0</span>
           </div>
         </div>
       </aside>
@@ -192,7 +193,7 @@ function AppLayout() {
             >
               <Menu />
             </button>
-            <span>Workspace</span>
+            <span>Dashboard</span>
             <ChevronRight size={13} />
             <strong>{current}</strong>
           </div>
@@ -215,10 +216,6 @@ function AppLayout() {
               />
               <kbd>↵</kbd>
             </form>
-            <span className="demo-tag">
-              <span />
-              Demo Environment
-            </span>
             <Link
               className="notification-button"
               aria-label={`${unread} unread notifications`}
@@ -277,10 +274,10 @@ function AppLayout() {
           </motion.div>
           <footer className="main-footer">
             <span>
-              <ShieldCheck size={13} /> Built for clarity. Connected by design.
+              <ShieldCheck size={13} /> Designed for clarity. Built for secure connections.
             </span>
             <span>
-              Fictional data. No real banking or payments.{" "}
+              Demo
               <span className="footer-brand">BankLink Finance © 2026</span>
             </span>
           </footer>
@@ -289,14 +286,14 @@ function AppLayout() {
       {help && (
         <Modal title="How can we help?" onClose={() => setHelp(false)}>
           <p>
-            This prototype lets you explore fictional accounts, request demo
-            cheques, simulate shipping payments, and follow example shipments.
+            Review account information, manage cheque requests, and check
+            delivery options.
           </p>
           <div className="notice">
             <CircleHelp size={20} />
             <span>
-              Need to start again? Your demo changes are saved on this browser.
-              No bank or courier is connected.
+              Your changes are saved in this browser. No bank or courier is
+              connected.
             </span>
           </div>
           <Button
@@ -315,14 +312,6 @@ function AppLayout() {
 }
 function BalanceCard({ large = false }: { large?: boolean }) {
   const s = useStore();
-  const [loading, setLoading] = useState(false);
-  const refresh = () => {
-    setLoading(true);
-    setTimeout(() => {
-      s.refresh();
-      setLoading(false);
-    }, 800);
-  };
   return (
     <section className={"balance-card " + (large ? "large" : "")}>
       <div className="balance-orbit orbit-one" />
@@ -330,14 +319,14 @@ function BalanceCard({ large = false }: { large?: boolean }) {
       <div className="balance-top">
         <span>
           <span className="bank-mini">
-            <Landmark size={16} />
+            <CreditCard size={16} />
           </span>{" "}
           Premium Checking
         </span>
-        <Badge>Demo Connected</Badge>
+        <Badge>Connected</Badge>
       </div>
       <div className="balance-label">
-        Available balance{" "}
+        Available balance · preview{" "}
         <button
           aria-label={s.hideBalance ? "Show balance" : "Hide balance"}
           onClick={s.toggleBalance}
@@ -345,43 +334,30 @@ function BalanceCard({ large = false }: { large?: boolean }) {
           <Eye size={15} />
         </button>
       </div>
-      <div className={"balance-amount " + (loading ? "skeleton" : "")}>
+      <div className="balance-amount">
         {s.hideBalance ? (
           "••,•••.••"
         ) : (
           <>
-            $48,750<span>.00</span>
+            $30,250<span>.00</span>
           </>
         )}
         <span className="currency">USD</span>
       </div>
       <div className="current-balance">
-        Current balance{" "}
-        <strong>{s.hideBalance ? "••••••" : money(account.current)}</strong>
-        <span className="balance-separator" /> <span>•••• 4821</span>
+        Debit card <strong>•••• {account.cardLast4}</strong>
       </div>
       <div className="balance-bottom">
-        <div>
-          <span className="bank-dot" />
-          {account.bank}
-          <span className="balance-caption">Fictional linked account</span>
-        </div>
-        <button
-          onClick={refresh}
-          disabled={loading}
-          aria-label="Refresh demo balance"
-        >
-          <RefreshCw size={14} className={loading ? "spinning" : ""} />
-          <span>
-            {loading
-              ? "Refreshing demo..."
-              : "Updated " +
-                new Date(s.refreshed).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
+        <div className="card-network-logos" aria-label="Mastercard and Verve">
+          <span className="mastercard-logo" aria-label="Mastercard">
+            <i />
+            <i />
           </span>
-        </button>
+          <span className="verve-logo" aria-label="Verve">
+            verve
+          </span>
+        </div>
+        <span className="balance-caption">Preview card · not issued</span>
       </div>
     </section>
   );
@@ -391,7 +367,7 @@ function Overview() {
   return (
     <>
       <PageHeading
-        title={`Good morning, ${s.name.split(" ")[0]}`}
+        title={`Welcome back, ${s.name.split(" ")[0]}`}
         description="Here’s an overview of your financial activity."
         action={
           <div className="date-display">
@@ -416,7 +392,14 @@ function Overview() {
             </Link>
           </div>
           <p className="section-sub">Your requests, at a glance.</p>
-          {s.cheques.slice(0, 3).map((c) => (
+          {!s.cheques.length && (
+            <div className="empty-state">
+              <Files />
+              <h3>No cheque requests yet</h3>
+              <p>New requests can be saved as drafts in this browser.</p>
+            </div>
+          )}
+          {s.cheques.slice(0, 6).map((c) => (
             <Link
               className="cheque-preview-row"
               key={c.id}
@@ -488,7 +471,7 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
           ? t.date.startsWith("2026-11")
           : t.date.startsWith("2026-10"))),
   );
-  const count = compact ? 4 : 6;
+  const count = compact ? 7 : 6;
   const visible = filtered.slice((page - 1) * count, page * count);
   function exportCSV() {
     const csv = [
@@ -500,11 +483,12 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "banklink-fictional-transactions.csv";
+    a.download = "banklink-transactions.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
   return (
+    <>
     <section
       className={
         "panel transaction-panel" + (compact ? " recent-transactions" : "")
@@ -525,7 +509,7 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
             View all transactions <ArrowUpRight size={14} />
           </Link>
         ) : (
-          <Button onClick={exportCSV}>
+          <Button onClick={exportCSV} disabled={!filtered.length}>
             <Download size={15} />
             Export CSV
           </Button>
@@ -605,6 +589,22 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
             </tr>
           </thead>
           <tbody>
+            {!visible.length && (
+              <tr>
+                <td colSpan={6}>
+                  <div className="empty-state">
+                    <Landmark />
+                    <h3>No transaction activity</h3>
+                    <p>
+                      Connect a bank to load verified account activity.
+                    </p>
+                    <Link className="text-link" to="/dashboard/accounts">
+                      View bank options
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            )}
             {visible.map((t) => {
               const Icon = txIcons[t.icon];
               return (
@@ -666,7 +666,7 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
             })}
           </tbody>
         </table>
-        {visible.length === 0 && (
+        {filtered.length > 0 && visible.length === 0 && (
           <div className="empty-state">
             <Search />
             <h3>No matching transactions</h3>
@@ -710,11 +710,12 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
             ]}
           />
           <p className="muted">
-            This is a fictional demonstration transaction.
+            Transaction details are not available until a bank is connected.
           </p>
         </Modal>
       )}
     </section>
+    </>
   );
 }
 function Accounts() {
@@ -723,7 +724,7 @@ function Accounts() {
     <>
       <PageHeading
         title="My accounts"
-        description="A clear view of your connected financial world."
+        description="Manage your bank connection and account details."
       />
       <div className="account-grid">
         <BalanceCard large />
@@ -734,19 +735,19 @@ function Accounts() {
           </div>
           <Details
             rows={[
-              ["Institution", account.bank],
+              ["Institution", `${account.bank} · Not connected`],
               ["Account type", account.type],
-              ["Account number", "•••• " + account.number],
+              ["Account number", "Unavailable · bank not connected"],
               ["Currency", "USD · US Dollar"],
-              ["Connection", <Badge key="badge">Demo Connected</Badge>],
+              ["Connection", <Badge key="badge">Not connected</Badge>],
             ]}
           />
           <div className="button-row">
-            <Button onClick={() => setModal("Account details")}>
+            <Button onClick={() => setModal("Account preview")}>
               View account details <ArrowUpRight size={15} />
             </Button>
-            <Button onClick={() => setModal("Manage connection")}>
-              Manage connection
+            <Button onClick={() => setModal("Bank connections")}>
+              Choose a bank
             </Button>
           </div>
         </section>
@@ -754,28 +755,47 @@ function Accounts() {
       <div className="notice">
         <Landmark size={22} />
         <div>
-          <strong>Your future banking connection starts here.</strong>
+          <strong>Choose a bank for a future connection.</strong>
           <p>
-            This is a fictional account. Live bank connectivity will be added in
-            a later development phase with a licensed banking partner.
+            Chase and Bank of America are listed as connection options. Neither
+            is connected, and the balance above is not live bank data.
           </p>
         </div>
       </div>
       {modal && (
         <Modal title={modal} onClose={() => setModal("")}>
-          <Details
-            rows={[
-              ["Bank", account.bank],
-              ["Account holder", useStore.getState().name],
-              ["Account", "•••• 4821"],
-              ["Available", money(account.available)],
-              ["Connection type", "Simulated · No live bank access"],
-            ]}
-          />
-          <p className="muted">
-            No credentials or real accounts are connected. This interface is
-            prepared for a future bank connection service.
-          </p>
+          {modal === "Bank connections" ? (
+            <div className="provider-list">
+              {bankProviders.map((bank) => (
+                <div className="provider-row" key={bank}>
+                  <div>
+                    <strong>{bank}</strong>
+                    <small>Connection setup required</small>
+                  </div>
+                  <Badge>Unavailable</Badge>
+                </div>
+              ))}
+              <p className="muted">
+                Connecting an account will be available after secure bank
+                integration is configured.
+              </p>
+            </div>
+          ) : (
+            <>
+              <Details
+                rows={[
+                  ["Institution", account.bank],
+                  ["Account holder", useStore.getState().name],
+                  ["Account number", "Unavailable · bank not connected"],
+                  ["Balance preview", money(account.available)],
+                  ["Connection status", "Not connected · preview only"],
+                ]}
+              />
+              <p className="muted">
+                This preview does not access or verify a bank account.
+              </p>
+            </>
+          )}
           <Button onClick={() => setModal("")} kind="primary">
             Done
           </Button>
@@ -836,6 +856,20 @@ function Cheques() {
               </tr>
             </thead>
             <tbody>
+              {!list.length && (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="empty-state">
+                      <Files />
+                      <h3>No cheque requests</h3>
+                      <p>
+                        Requests will appear here after they are saved. They
+                        are not sent to a bank from this workspace.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {list.map((c) => (
                 <tr key={c.id}>
                   <td className="reference">{c.id}</td>
@@ -860,8 +894,8 @@ function Cheques() {
         </div>
       </section>
       <p className="subtle-caption">
-        All requests and status events are simulated. New requests remain
-        submitted until a future real review process is connected.
+        Request history is stored in this browser. No request has been sent to
+        a bank.
       </p>
       {selected && (
         <Modal title="Cheque request details" onClose={() => setSelected(null)}>
@@ -873,25 +907,25 @@ function Cheques() {
               ["Status", <Badge key="s">{selected.status}</Badge>],
               ["Delivery", selected.address],
               ["Shipping service", selected.service],
-              ["Illustrative charge", money(selected.rate)],
+              ["Carrier quote", selected.rate ? money(selected.rate) : "Unavailable"],
               ["Memo", selected.memo || "—"],
             ]}
           />
-          <h3 className="timeline-title">Simulated request timeline</h3>
+          <h3 className="timeline-title">Request status history</h3>
           <div className="mini-timeline">
             <div>
               <CheckCircle2 size={17} />
               <span>
-                Demo Request Submitted
-                <small>{selected.date} · Fictional event</small>
+                Draft saved
+                <small>{selected.date} · Stored in this browser</small>
               </span>
             </div>
-            {selected.status !== "Demo Request Submitted" && (
+            {selected.status !== "Draft saved" && (
               <div>
                 <CheckCircle2 size={17} />
                 <span>
                   {selected.status}
-                  <small>Seeded demonstration status</small>
+                  <small>Status history</small>
                 </span>
               </div>
             )}
@@ -904,6 +938,9 @@ function Cheques() {
 function Shipping() {
   const [index, setIndex] = useState(1);
   const [copied, setCopied] = useState(false);
+  const [provider, setProvider] = useState<(typeof shippingProviders)[number]>(
+    shippingProviders[0],
+  );
   const item = shipments[index];
   const stages = [
     "Preparing Shipment",
@@ -917,12 +954,33 @@ function Shipping() {
     <>
       <PageHeading
         title="Shipping & tracking"
-        description="Follow the journey, from the first step to the doorstep."
+        description="Choose a carrier and review delivery tracking."
       />
+      <section className="panel carrier-panel">
+        <div>
+          <h2>Carrier integrations</h2>
+          <p className="section-sub">
+            Select a provider. Live rates and tracking require an active
+            connection.
+          </p>
+        </div>
+        <div className="segmented" aria-label="Shipping carrier">
+          {shippingProviders.map((name) => (
+            <button
+              className={provider === name ? "selected" : ""}
+              key={name}
+              onClick={() => setProvider(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+        <Badge>Not connected</Badge>
+      </section>
       <div className="shipping-layout">
         <section className="panel shipment-list">
           <h2>Your shipments</h2>
-          <p className="section-sub">Fictional delivery examples</p>
+          <p className="section-sub">Tracking preview · not carrier data</p>
           {shipments.map((s, i) => (
             <button
               key={s.id}
@@ -944,10 +1002,19 @@ function Shipping() {
             </button>
           ))}
         </section>
+        {!item ? (
+          <section className="panel empty-state shipping-empty">
+            <Truck />
+            <h2>No shipments to track</h2>
+            <p>
+              Connect {provider} to request live rates and track deliveries.
+            </p>
+          </section>
+        ) : (
         <section className="panel tracking-panel">
           <div className="section-heading">
             <div>
-              <div className="eyebrow">DEMO SHIPMENT</div>
+              <div className="eyebrow">{provider.toUpperCase()} · PREVIEW</div>
               <h2>{stages[item.stage]}</h2>
             </div>
             <span className="tracking-large-icon">
@@ -958,7 +1025,7 @@ function Shipping() {
             <code>{item.id}</code>
             <button
               className="icon-button"
-              aria-label="Copy demo tracking reference"
+              aria-label="Copy tracking reference"
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(item.id);
@@ -970,7 +1037,7 @@ function Shipping() {
             >
               {copied ? <Check size={16} /> : <Copy size={16} />}
             </button>
-            <span>Demo-only tracking reference</span>
+            <span>Tracking reference</span>
           </div>
           <div className="shipment-progress">
             {stages.map((name, i) => (
@@ -978,7 +1045,7 @@ function Shipping() {
                 <span>{i <= item.stage ? <Check size={15} /> : i + 1}</span>
                 <strong>{name}</strong>
                 <small>
-                  {i <= item.stage ? "Simulated event" : "Awaiting demo event"}
+                  {i <= item.stage ? "Preview status" : "Awaiting carrier connection"}
                 </small>
               </div>
             ))}
@@ -995,11 +1062,12 @@ function Shipping() {
           <div className="notice">
             <CircleHelp size={18} />
             <p>
-              This timeline is a seeded illustration. No live FedEx shipment,
-              quote, or delivery commitment exists.
+              This tracking view is not connected to {provider}. Live status
+              and delivery estimates are unavailable.
             </p>
           </div>
         </section>
+        )}
       </div>
     </>
   );
@@ -1007,9 +1075,7 @@ function Shipping() {
 function Payments() {
   const s = useStore();
   const [selected, setSelected] = useState<Invoice | null>(null);
-  const [method, setMethod] = useState("Credit/Debit Card");
-  const [paid, setPaid] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [method, setMethod] = useState("Bitcoin (BTC)");
   const [tab, setTab] = useState("All invoices");
   const filtered = s.invoices.filter(
     (i) => tab === "All invoices" || (tab === "Paid" ? i.paid : !i.paid),
@@ -1017,21 +1083,12 @@ function Payments() {
   const due = s.invoices
     .filter((i) => !i.paid)
     .reduce((a, i) => a + i.amount, 0);
-  function pay() {
-    if (!selected) return;
-    setLoading(true);
-    setTimeout(() => {
-      s.pay(selected.id, method);
-      setPaid(true);
-      setLoading(false);
-    }, 800);
-  }
   const live = s.invoices.find((i) => i.id === selected?.id);
   return (
     <>
       <PageHeading
         title="Payments"
-        description="Simple payments. Clear records. Everything accounted for."
+        description="Review invoices and available payment methods."
       />
       <div className="payment-summary">
         <div className="panel">
@@ -1040,27 +1097,74 @@ function Payments() {
           </span>
           <div>
             <p>Outstanding shipping charges</p>
-            <strong>{money(due)}</strong>
+            <strong>{s.invoices.length ? money(due) : "—"}</strong>
           </div>
-          <Badge>{s.invoices.filter((i) => !i.paid).length} outstanding</Badge>
+          <Badge>
+            {s.invoices.length
+              ? `${s.invoices.filter((i) => !i.paid).length} outstanding`
+              : "No invoice data"}
+          </Badge>
         </div>
         <div className="panel">
           <span className="stat-icon green">
             <CheckCheck size={20} />
           </span>
           <div>
-            <p>Total simulated payments</p>
+            <p>Payments recorded</p>
             <strong>
-              {money(
-                s.invoices
-                  .filter((i) => i.paid)
-                  .reduce((a, i) => a + i.amount, 0),
-              )}
+              {s.invoices.length
+                ? money(
+                    s.invoices
+                      .filter((i) => i.paid)
+                      .reduce((a, i) => a + i.amount, 0),
+                  )
+                : "—"}
             </strong>
           </div>
-          <span className="muted">Illustrative USD</span>
+          <span className="muted">Not live</span>
         </div>
       </div>
+      <section className="panel payment-methods">
+        <div className="section-heading">
+          <h2>Payment method</h2>
+          <Badge>Checkout unavailable</Badge>
+        </div>
+        <label className="field">
+          Choose how you would pay
+          <select
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+          >
+            <option value="Credit/Debit Card" disabled>
+              Bank card — unavailable
+            </option>
+            <option value="Bank Transfer / ACH" disabled>
+              Bank transfer — unavailable
+            </option>
+            <option value="Bitcoin (BTC)">Bitcoin (BTC)</option>
+          </select>
+        </label>
+        <p className="muted">
+          Bitcoin is the only selectable method. Checkout requires a connected
+          wallet/payment provider and is not active yet.
+        </p>
+      </section>
+      <section className="panel card-preview-section">
+        <div className="section-heading">
+          <h2>Payment card</h2>
+          <Badge>Not issued</Badge>
+        </div>
+        <div className="card-preview">
+          <CreditCard size={22} />
+          <span>Bank card</span>
+          <strong>•••• •••• •••• {account.cardLast4}</strong>
+          <small>{s.name}</small>
+        </div>
+        <p className="muted">
+          Card details are not connected to a card issuer and cannot be used to
+          make payments.
+        </p>
+      </section>
       <section className="panel">
         <div className="section-heading">
           <h2>Shipping invoices</h2>
@@ -1089,6 +1193,20 @@ function Payments() {
               </tr>
             </thead>
             <tbody>
+              {!filtered.length && (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="empty-state">
+                      <Receipt />
+                      <h3>No payment records</h3>
+                      <p>
+                        Invoices will appear after a connected service creates
+                        them.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {filtered.map((i) => (
                 <tr key={i.id}>
                   <td className="reference">{i.id}</td>
@@ -1103,11 +1221,10 @@ function Payments() {
                       className="text-link"
                       onClick={() => {
                         setSelected(i);
-                        setPaid(false);
-                        setMethod("Credit/Debit Card");
+                        setMethod("Bitcoin (BTC)");
                       }}
                     >
-                      {i.paid ? "View receipt" : "Pay in demo"}{" "}
+                      {i.paid ? "View payment record" : "View invoice"}{" "}
                       <ArrowUpRight size={14} />
                     </button>
                   </td>
@@ -1120,26 +1237,20 @@ function Payments() {
       <div className="notice">
         <ShieldCheck size={20} />
         <p>
-          All amounts are illustrative. Simulating a payment changes only the
-          invoice state, never cheque issuance or delivery status.
+          Payment processing is unavailable until a payment provider is
+          connected. Invoice amounts shown here are not live charges.
         </p>
       </div>
       {selected && (
         <Modal
-          title={
-            live?.paid ? "Demo payment receipt" : "Simulated shipping checkout"
-          }
+          title={live?.paid ? "Payment record" : "Shipping checkout"}
           onClose={() => setSelected(null)}
         >
           {live?.paid ? (
             <>
               <div className="payment-success">
                 <CheckCircle2 size={38} />
-                <h3>
-                  {paid
-                    ? "Payment simulated successfully"
-                    : "Payment confirmed · Demo"}
-                </h3>
+                <h3>Payment record</h3>
                 <strong>{money(selected.amount)}</strong>
               </div>
               <Details
@@ -1147,48 +1258,31 @@ function Payments() {
                   ["Receipt", live.receipt],
                   ["Invoice", selected.id],
                   ["Method", live.method],
-                  ["Status", "Paid · simulated"],
+                  ["Status", "Not verified with a payment provider"],
                   ["Cheque issuance", "Unaffected by payment"],
                 ]}
               />
               <p className="muted">
-                This is a demo receipt and is not evidence of a real payment.
+                This receipt is a local preview and does not confirm a payment.
               </p>
             </>
           ) : (
             <>
               <div className="detail-amount">
                 {money(selected.amount)}
-                <small>Illustrative shipping charge</small>
+                <small>Invoice amount · not live</small>
               </div>
-              <label className="field">
-                Demonstration method
-                <select
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value)}
-                >
-                  {[
-                    "Credit/Debit Card",
-                    "Bank Transfer / ACH",
-                    "Bitcoin (BTC)",
-                  ].map((m) => (
-                    <option key={m}>{m}</option>
-                  ))}
-                </select>
-              </label>
-              <div className="demo-payment-method">
+              <div className="payment-method-panel">
                 {method === "Bitcoin (BTC)" ? (
                   <>
                     <span className="bitcoin-icon">₿</span>
                     <div>
-                      <strong>
-                        {(selected.amount / 75000).toFixed(8)} BTC
-                      </strong>
+                      <strong>Live BTC conversion unavailable</strong>
                       <p>
-                        Illustrative conversion at $75,000 / BTC. Not a live
-                        rate.
+                        A wallet connection and current exchange rate are
+                        required to calculate this amount.
                       </p>
-                      <Badge>Awaiting simulation</Badge>
+                      <Badge>Not connected</Badge>
                     </div>
                   </>
                 ) : (
@@ -1197,8 +1291,8 @@ function Payments() {
                     <div>
                       <strong>
                         {method === "Credit/Debit Card"
-                          ? "Demo card · •••• DEMO"
-                          : "Demo bank transfer"}
+                          ? `${s.name} · •••• ${account.cardLast4}`
+                          : "Bank transfer"}
                       </strong>
                       <p>
                         No{" "}
@@ -1214,17 +1308,12 @@ function Payments() {
               <div className="notice">
                 <CircleHelp size={18} />
                 <p>
-                  No money will move. No wallet address or actual transaction
-                  will be generated.
+                  Bitcoin payments are not connected. No wallet address or
+                  payment transaction can be created yet.
                 </p>
               </div>
-              <Button kind="primary full" onClick={pay} disabled={loading}>
-                {loading ? (
-                  <RefreshCw size={16} className="spinning" />
-                ) : (
-                  <Check size={16} />
-                )}
-                Simulate Successful Payment
+              <Button kind="primary full" disabled>
+                Bitcoin checkout unavailable
               </Button>
             </>
           )}
@@ -1319,7 +1408,7 @@ function SettingsPage() {
       return;
     }
     s.profile(name.trim(), email);
-    setFeedback("Your demo profile has been saved.");
+    setFeedback("Your profile has been saved.");
   }
   return (
     <>
@@ -1330,7 +1419,7 @@ function SettingsPage() {
       <div className="settings-grid">
         <section className="panel settings-panel">
           <h2>Personal information</h2>
-          <p className="section-sub">Your fictional demonstration profile.</p>
+          <p className="section-sub">Your profile information.</p>
           <form onSubmit={save}>
             <label className="field">
               Full name
@@ -1362,12 +1451,12 @@ function SettingsPage() {
         <section className="panel settings-panel">
           <h2>Notification preferences</h2>
           <p className="section-sub">
-            Local demo preferences; no messages are sent.
+            Preferences are stored locally; no messages are sent.
           </p>
           {[
             ["email", "Email updates", "Cheque and payment activity"],
             ["push", "Push notifications", "Delivery and request updates"],
-            ["security", "Security alerts", "Interface demonstration only"],
+            ["security", "Security alerts", "Interface setting only"],
           ].map(([key, title, sub]) => (
             <div className="setting-row" key={key}>
               <div>
@@ -1389,18 +1478,18 @@ function SettingsPage() {
         <section className="panel settings-panel">
           <h2>Security</h2>
           <p className="section-sub">
-            Interface demonstration. Backend authentication is not implemented.
+            Backend authentication is not implemented.
           </p>
           <div className="setting-row">
             <div>
               <strong>Two-step verification</strong>
-              <small>Demo toggle · provides no authentication security</small>
+              <small>This setting does not provide authentication security</small>
             </div>
             <button
               className={"switch " + (security ? "on" : "")}
               role="switch"
               aria-checked={security}
-              aria-label="Demo two-step verification"
+              aria-label="Two-step verification"
               onClick={() => setSecurity(!security)}
             >
               <span />
@@ -1409,8 +1498,7 @@ function SettingsPage() {
           <div className="notice">
             <LockKeyhole size={18} />
             <p>
-              No actual passwords or banking credentials are stored by this
-              prototype.
+              No actual passwords or banking credentials are stored here.
             </p>
           </div>
         </section>
@@ -1442,11 +1530,11 @@ function SettingsPage() {
           </div>
         </section>
         <section className="panel settings-panel">
-          <h2>Connected accounts</h2>
+          <h2>Bank connections</h2>
           <div className="setting-row">
             <div>
-              <strong>Example Partner Bank · •••• 4821</strong>
-              <small>Fictional account · no live connection</small>
+              <strong>Chase · Not connected</strong>
+              <small>Bank connection required</small>
             </div>
             <Link className="text-link" to="/dashboard/accounts">
               Manage <ArrowUpRight size={15} />
@@ -1456,8 +1544,7 @@ function SettingsPage() {
         <section className="panel settings-panel">
           <h2>Support</h2>
           <p className="muted">
-            Explore the core workflows in this browser. Demo records and
-            preferences are saved locally on your device.
+            Review your account settings and provider connection status.
           </p>
           <Link to="/dashboard/request-cheque" className="text-link">
             Try your first cheque request <ArrowRight size={16} />
@@ -1512,7 +1599,7 @@ function App() {
               <>
                 <PageHeading
                   title="Transactions"
-                  description="The complete picture of your fictional financial activity."
+                  description="Transaction activity appears after a bank is connected."
                 />
                 <TransactionTable />
               </>
@@ -1538,7 +1625,7 @@ createRoot(document.getElementById("app")!).render(
           <div className="app-loading">
             <strong className="loading-wordmark">BankLink Finance</strong>
             <RefreshCw className="spinning" size={22} />
-            <p>Connecting your demo workspace…</p>
+            <p>Connecting your workspace…</p>
           </div>
         }
       >

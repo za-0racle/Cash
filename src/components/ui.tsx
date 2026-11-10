@@ -152,7 +152,7 @@ export function PageHeading({
   return (
     <div className="page-heading">
       <div>
-        <div className="eyebrow">YOUR CONNECTED FINANCIAL WORLD</div>
+        <div className="eyebrow">YOUR FINANCIAL WORKSPACE</div>
         <h1>{title}</h1>
         <p>{description}</p>
       </div>
