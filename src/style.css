@@ -1030,6 +1030,13 @@ main {
   font-size: 7px;
   margin-top: 6px;
 }
+.cheque-checkout-link {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 7px;
+  font-size: 9px;
+}
 .tiny-status i {
   width: 3px;
   height: 3px;
@@ -1985,6 +1992,13 @@ th.amount-col {
 .payment-method-panel strong {
   font-size: 13px;
   color: #c5d6ed;
+}
+.bitcoin-wallet {
+  display: block;
+  margin-top: 6px;
+  color: #e2eefa;
+  font-size: 12px;
+  overflow-wrap: anywhere;
 }
 .payment-method-panel p {
   font-size: 10px;

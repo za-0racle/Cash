@@ -22,8 +22,6 @@ import {
   Files,
   ShieldCheck,
   ArrowRight,
-  LayoutDashboard,
-  ArrowUpRight,
 } from "lucide-react";
 const authSchema = z.object({
   first: z.string(),
@@ -76,7 +74,7 @@ export default function Auth({
     defaultValues: {
       first: "",
       last: "",
-      email: "",
+      email: "samueldaren@gmail.com",
       password: "",
       confirm: "",
       terms: false,
@@ -89,13 +87,17 @@ export default function Auth({
     /[0-9]/.test(password),
     /[^a-zA-Z0-9]/.test(password),
   ].filter(Boolean).length;
-  function submit() {
+  function submit(values: AuthForm) {
+    if (mode === "signin") {
+      login(undefined, values.email);
+      navigate("/dashboard");
+      return;
+    }
+
     setFeedback(
       mode === "forgot"
-        ? "Password reset is unavailable until authentication is connected."
-        : mode === "signup"
-          ? "Account creation is unavailable until authentication is connected."
-          : "Sign-in is unavailable until authentication is connected. Open the account preview to continue.",
+        ? "Password reset"
+        : "Create Account",
     );
   }
   function input(
@@ -193,7 +195,7 @@ export default function Auth({
       <section className="auth-form-side">
         <span className="environment-tag">
           <span />
-          Integrations pending
+          Demo sign-in
         </span>
         <div className="auth-form">
           <div className="eyebrow">WELCOME TO BANKLINK</div>
@@ -208,8 +210,8 @@ export default function Auth({
             {mode === "signup"
               ? "Account creation will be available after authentication is connected."
               : mode === "forgot"
-                ? "Password reset will be available after authentication is connected."
-                : "Sign-in will be available after authentication is connected."}
+                ? "Password reset will be available."
+                : "Enter an email and password to open the dashboard."}
           </p>
           <form onSubmit={handleSubmit(submit)}>
             {mode === "signup" && (
@@ -269,7 +271,7 @@ export default function Auth({
             )}
             {mode === "signin" && (
               <div className="auth-options">
-                <span>Authentication unavailable</span>
+                <span></span>
                 <Link to="/forgot-password">Forgot password?</Link>
               </div>
             )}
@@ -278,7 +280,7 @@ export default function Auth({
                 ? "Account creation unavailable"
                 : mode === "forgot"
                   ? "Password reset unavailable"
-                  : "Sign-in unavailable"}
+                  : "Continue to dashboard"}
               <ArrowRight size={16} />
             </Button>
             {feedback && (
@@ -288,27 +290,9 @@ export default function Auth({
             )}
           </form>
           {mode === "signin" && (
-            <>
-              <div className="divider">
-                <span>or take a look around</span>
-              </div>
-              <Button
-                kind="full dashboard-access"
-                onClick={() => {
-                  login();
-                  navigate("/dashboard");
-                }}
-              >
-                <LayoutDashboard size={17} />
-                Open account preview
-                <ArrowUpRight size={16} />
-              </Button>
-              <p className="auth-disclaimer">
-                Preview profile: Samuel Daren.
-                <br />
-                No bank or payment data is connected.
-              </p>
-            </>
+            <p className="auth-disclaimer">
+              sign-in to your Dashboard to view you account balances.
+            </p>
           )}
           <p className="auth-switch">
             {mode === "signup"

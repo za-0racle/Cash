@@ -12,9 +12,9 @@ npm install
 npm run dev
 ```
 
-Open the printed Vite URL and choose **Open account preview** to inspect the
-workspace. The profile name is Samuel Daren. Sign-in, account creation, and
-password reset require an authentication service.
+Open the printed Vite URL and use the sign-in form to enter the workspace demo.
+The sign-in is simulated: it does not verify or store passwords, and it must
+not be used to protect real data. The profile name is Samuel Daren.
 
 ```sh
 npm run typecheck
@@ -47,7 +47,7 @@ shipping, payment, and settings screens. Authentication and cheque-request
 forms are in `src/pages/`; shared UI components and the bank-activity empty
 state are in `src/components/`.
 
-Do not use the balance preview or local profile as financial or identity
+Do not use the sample balances or local profile as financial or identity
 verification. Before launch, configure secure server-side authentication,
 bank data access, payment processing, and carrier rating/tracking. Keep API
 credentials and financial operations on the server; do not collect bank

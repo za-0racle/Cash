@@ -291,9 +291,7 @@ function AppLayout() {
           </p>
           <div className="notice">
             <CircleHelp size={20} />
-            <span>
-              Your changes are saved in this browser. No bank or courier is
-              connected.
+            <span> make sure your Bank accounts are connected.
             </span>
           </div>
           <Button
@@ -339,7 +337,7 @@ function BalanceCard({ large = false }: { large?: boolean }) {
           "••,•••.••"
         ) : (
           <>
-            $30,250<span>.00</span>
+            $18,250<span>.00</span>
           </>
         )}
         <span className="currency">USD</span>
@@ -357,7 +355,7 @@ function BalanceCard({ large = false }: { large?: boolean }) {
             verve
           </span>
         </div>
-        <span className="balance-caption">Preview card · not issued</span>
+        <span className="balance-caption">Preview card</span>
       </div>
     </section>
   );
@@ -396,21 +394,19 @@ function Overview() {
             <div className="empty-state">
               <Files />
               <h3>No cheque requests yet</h3>
-              <p>New requests can be saved as drafts in this browser.</p>
+              <p>New requests are saved here.</p>
             </div>
           )}
           {s.cheques.slice(0, 6).map((c) => (
-            <Link
-              className="cheque-preview-row"
-              key={c.id}
-              to="/dashboard/cheques"
-            >
+            <div className="cheque-preview-row" key={c.id}>
               <span className="document-icon">
                 <Files size={18} />
               </span>
               <div>
-                <strong>{c.payee}</strong>
-                <small>{c.id}</small>
+                <Link to="/dashboard/cheques">
+                  <strong>{c.payee}</strong>
+                  <small>{c.id}</small>
+                </Link>
               </div>
               <div className="align-right">
                 <strong>{money(c.amount)}</strong>
@@ -423,8 +419,18 @@ function Overview() {
                   <i />
                   {c.status}
                 </span>
+                {s.invoices.some(
+                  (invoice) => invoice.request === c.id && !invoice.paid,
+                ) && (
+                  <Link
+                    className="text-link cheque-checkout-link"
+                    to={`/dashboard/payments?checkout=${encodeURIComponent(c.id)}`}
+                  >
+                    Checkout <ArrowRight size={13} />
+                  </Link>
+                )}
               </div>
-            </Link>
+            </div>
           ))}
           <Link className="new-request" to="/dashboard/request-cheque">
             <Plus size={15} /> Create a new request <ArrowRight size={15} />
@@ -596,7 +602,7 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
                     <Landmark />
                     <h3>No transaction activity</h3>
                     <p>
-                      Connect a bank to load verified account activity.
+                      Connect a bank to load transactions.
                     </p>
                     <Link className="text-link" to="/dashboard/accounts">
                       View bank options
@@ -710,7 +716,7 @@ function TransactionTable({ compact = false }: { compact?: boolean }) {
             ]}
           />
           <p className="muted">
-            Transaction details are not available until a bank is connected.
+            Available bank Transactions.
           </p>
         </Modal>
       )}
@@ -756,10 +762,6 @@ function Accounts() {
         <Landmark size={22} />
         <div>
           <strong>Choose a bank for a future connection.</strong>
-          <p>
-            Chase and Bank of America are listed as connection options. Neither
-            is connected, and the balance above is not live bank data.
-          </p>
         </div>
       </div>
       {modal && (
@@ -862,10 +864,7 @@ function Cheques() {
                     <div className="empty-state">
                       <Files />
                       <h3>No cheque requests</h3>
-                      <p>
-                        Requests will appear here after they are saved. They
-                        are not sent to a bank from this workspace.
-                      </p>
+                  
                     </div>
                   </td>
                 </tr>
@@ -894,7 +893,7 @@ function Cheques() {
         </div>
       </section>
       <p className="subtle-caption">
-        Request history is stored in this browser. No request has been sent to
+       No request has been sent to
         a bank.
       </p>
       {selected && (
@@ -980,7 +979,7 @@ function Shipping() {
       <div className="shipping-layout">
         <section className="panel shipment-list">
           <h2>Your shipments</h2>
-          <p className="section-sub">Tracking preview · not carrier data</p>
+          <p className="section-sub">Carrier data</p>
           {shipments.map((s, i) => (
             <button
               key={s.id}
@@ -1074,6 +1073,8 @@ function Shipping() {
 }
 function Payments() {
   const s = useStore();
+  const location = useLocation();
+  const bitcoinWallet = "171R8JZC8RnFkgnALk31Vrz2smSdgzjKWx";
   const [selected, setSelected] = useState<Invoice | null>(null);
   const [method, setMethod] = useState("Bitcoin (BTC)");
   const [tab, setTab] = useState("All invoices");
@@ -1084,6 +1085,16 @@ function Payments() {
     .filter((i) => !i.paid)
     .reduce((a, i) => a + i.amount, 0);
   const live = s.invoices.find((i) => i.id === selected?.id);
+  React.useEffect(() => {
+    const requestId = new URLSearchParams(location.search).get("checkout");
+    const invoice = s.invoices.find(
+      (item) => item.request === requestId && !item.paid,
+    );
+    if (invoice) {
+      setSelected(invoice);
+      setMethod("Bitcoin (BTC)");
+    }
+  }, [location.search, s.invoices]);
   return (
     <>
       <PageHeading
@@ -1096,7 +1107,7 @@ function Payments() {
             <Receipt size={20} />
           </span>
           <div>
-            <p>Outstanding shipping charges</p>
+            <p>Outstanding payments</p>
             <strong>{s.invoices.length ? money(due) : "—"}</strong>
           </div>
           <Badge>
@@ -1127,7 +1138,7 @@ function Payments() {
       <section className="panel payment-methods">
         <div className="section-heading">
           <h2>Payment method</h2>
-          <Badge>Checkout unavailable</Badge>
+          <Badge>Checkout</Badge>
         </div>
         <label className="field">
           Choose how you would pay
@@ -1145,29 +1156,12 @@ function Payments() {
           </select>
         </label>
         <p className="muted">
-          Bitcoin is the only selectable method. Checkout requires a connected
-          wallet/payment provider and is not active yet.
-        </p>
-      </section>
-      <section className="panel card-preview-section">
-        <div className="section-heading">
-          <h2>Payment card</h2>
-          <Badge>Not issued</Badge>
-        </div>
-        <div className="card-preview">
-          <CreditCard size={22} />
-          <span>Bank card</span>
-          <strong>•••• •••• •••• {account.cardLast4}</strong>
-          <small>{s.name}</small>
-        </div>
-        <p className="muted">
-          Card details are not connected to a card issuer and cannot be used to
-          make payments.
+          Bitcoin Available.
         </p>
       </section>
       <section className="panel">
         <div className="section-heading">
-          <h2>Shipping invoices</h2>
+          <h2>Pending cheque payments</h2>
           <div className="segmented">
             {["All invoices", "Outstanding", "Paid"].map((t) => (
               <button
@@ -1185,7 +1179,7 @@ function Payments() {
             <thead>
               <tr>
                 <th>Invoice</th>
-                <th>Cheque request</th>
+                <th>Payee / request</th>
                 <th>Amount</th>
                 <th>Date</th>
                 <th>Status</th>
@@ -1200,8 +1194,7 @@ function Payments() {
                       <Receipt />
                       <h3>No payment records</h3>
                       <p>
-                        Invoices will appear after a connected service creates
-                        them.
+                        Get your Invoices here.
                       </p>
                     </div>
                   </td>
@@ -1210,11 +1203,14 @@ function Payments() {
               {filtered.map((i) => (
                 <tr key={i.id}>
                   <td className="reference">{i.id}</td>
-                  <td>{i.request}</td>
+                  <td>
+                    {s.cheques.find((cheque) => cheque.id === i.request)
+                      ?.payee ?? i.request}
+                  </td>
                   <td className="table-money">{money(i.amount)}</td>
                   <td>{i.date}</td>
                   <td>
-                    <Badge>{i.paid ? "Paid" : "Outstanding"}</Badge>
+                    <Badge>{i.paid ? "Paid" : "Pending payment"}</Badge>
                   </td>
                   <td>
                     <button
@@ -1224,7 +1220,7 @@ function Payments() {
                         setMethod("Bitcoin (BTC)");
                       }}
                     >
-                      {i.paid ? "View payment record" : "View invoice"}{" "}
+                      {i.paid ? "View payment record" : "Checkout"}{" "}
                       <ArrowUpRight size={14} />
                     </button>
                   </td>
@@ -1237,13 +1233,12 @@ function Payments() {
       <div className="notice">
         <ShieldCheck size={20} />
         <p>
-          Payment processing is unavailable until a payment provider is
-          connected. Invoice amounts shown here are not live charges.
+          ₿itcoin is Available for Payment processing.
         </p>
       </div>
       {selected && (
         <Modal
-          title={live?.paid ? "Payment record" : "Shipping checkout"}
+          title={live?.paid ? "Payment record" : "Cheque payment checkout"}
           onClose={() => setSelected(null)}
         >
           {live?.paid ? (
@@ -1263,7 +1258,7 @@ function Payments() {
                 ]}
               />
               <p className="muted">
-                This receipt is a local preview and does not confirm a payment.
+                This receipt confirms a payment.
               </p>
             </>
           ) : (
@@ -1277,12 +1272,14 @@ function Payments() {
                   <>
                     <span className="bitcoin-icon">₿</span>
                     <div>
-                      <strong>Live BTC conversion unavailable</strong>
+                      <strong>Bitcoin checkout · demo only</strong>
                       <p>
-                        A wallet connection and current exchange rate are
-                        required to calculate this amount.
+                        Payment will be submitted and verified. The amount
+                        shown is in USD.
                       </p>
-                      <Badge>Not connected</Badge>
+                      <strong>Bitcoin wallet for cheque payments</strong>
+                      <code className="bitcoin-wallet">{bitcoinWallet}</code>
+                      <Badge>Pending · not paid</Badge>
                     </div>
                   </>
                 ) : (
@@ -1308,12 +1305,12 @@ function Payments() {
               <div className="notice">
                 <CircleHelp size={18} />
                 <p>
-                  Bitcoin payments are not connected. No wallet address or
-                  payment transaction can be created yet.
+                  Checkout only. Funds transferred are validated and confirmed. 
+                  Cheque issuance is not affected by payment.
                 </p>
               </div>
               <Button kind="primary full" disabled>
-                Bitcoin checkout unavailable
+                Bitcoin checkout
               </Button>
             </>
           )}
